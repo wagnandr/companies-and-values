@@ -1,8 +1,23 @@
 'use strict';
 
 angular.module('valuesMain', [
-  'uiGmapgoogle-maps'
-]).controller('MainCtrl', function ($scope, Companies, companiesToMarkers, Constants){
+  'ngRoute',
+  'uiGmapgoogle-maps',
+  'ui.bootstrap'
+]).config(['$routeProvider', function($routeProvider) {
+  $routeProvider.
+    when('/show-map', {
+      templateUrl: 'show-map.html',
+      controller: 'ShowMapCtrl'
+    }).
+    when('/add-company', {
+      templateUrl: 'add-company.html',
+      controller: 'AddCompanyCtrl'
+    }).
+    otherwise({
+      redirectTo: '/show-map'
+    });
+}]).controller('ShowMapCtrl', function ($scope, Companies, companiesToMarkers, Constants, $uibModal){
   const munich = { latitude: 48.14, longitude: 11.6 };
 
   $scope.map = { center: munich, zoom: 12 };
@@ -28,6 +43,15 @@ angular.module('valuesMain', [
   $scope.showDetails = function(company){
     $scope.activeCompany = company;
   };
+
+  $scope.openAddCompanyDialog = function (){
+    var modalInstance = $uibModal.open({
+      animation: true,
+      templateUrl: 'addCompanyDialog.html',
+      controller: 'AddCompanyCtrl',
+      size: 'lg'
+    });
+  };
 }).factory('Companies', function($q){
   function Companies(){
     this.list = [{
@@ -51,6 +75,14 @@ angular.module('valuesMain', [
     const self = this;
     return $q(function(resolve, reject) {
       resolve(self.list);
+    });
+  };
+
+  Companies.prototype.add = function(company){
+    const self = this;
+    return $q(function(resolve, reject) {
+      self.list.push(_.clone(company));
+      resolve();
     });
   };
 
@@ -92,5 +124,22 @@ angular.module('valuesMain', [
     controller: ShowDetailsCtrl,
     scope: scope,
     templateUrl: 'showDetails.html'
+  };
+}).controller('AddCompanyCtrl', function($scope, Companies){
+  function init(){
+    $scope.newCompany = {
+      locations: [],
+      values: []
+    };
+  }
+
+  init();
+
+  $scope.addCompany = function(){
+    Companies.add($scope.newCompany).then(init);
+  }
+}).directive('mainNavBar', function(){
+  return {
+    templateUrl: 'main-nav-bar.html'
   };
 });

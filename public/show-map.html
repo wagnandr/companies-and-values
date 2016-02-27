@@ -1,0 +1,7 @@
+<div style="position:relative;border:1px solid black;">
+  <ui-gmap-google-map center='map.center' zoom='map.zoom'>
+    <ui-gmap-markers models="companyMarkers" coords="'coords'" click="companyClicked">
+    </ui-gmap-markers>
+  </ui-gmap-google-map>
+  <show-details company='activeCompany' map='map'></showDetails>
+</div>
