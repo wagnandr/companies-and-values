@@ -1,0 +1,23 @@
+{
+  "name": "values-webpage",
+  "authors": [
+    "wagnandr <wagnandr@in.tum.de>"
+  ],
+  "description": "Gives small enterprises the possibility to showcase its values",
+  "main": "index.html",
+  "moduleType": [],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "angularjs#~1.5.0",
+    "angular-google-maps": "~2.3.2"
+  }
+}
