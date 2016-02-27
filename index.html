@@ -16,7 +16,11 @@
   <body>
     <div ng-app="valuesMain" ng-controller="MainCtrl">
       {{map | json}}
-      <ui-gmap-google-map center='map.center' zoom='map.zoom'></ui-gmap-google-map>
+      {{ companyMarkers | json}}
+      <ui-gmap-google-map center='map.center' zoom='map.zoom'>
+        <ui-gmap-markers models="companyMarkers" coords="'coords'" click="companyClicked">
+        </ui-gmap-markers>
+      </ui-gmap-google-map>
     </div>
   </body>
 </html>
