@@ -1,31 +1,32 @@
+'use strict';
+
 angular.module('valuesMain', [
   'uiGmapgoogle-maps'
-]).controller('MainCtrl', function ($scope, Companies){
-  'use strict';
-
-  const munich = { latitude: 48.14, longitude: 11.6 }
+]).controller('MainCtrl', function ($scope, Companies, companiesToMarkers, Constants){
+  const munich = { latitude: 48.14, longitude: 11.6 };
 
   $scope.map = { center: munich, zoom: 12 };
 
   Companies.getList().then((list) => {
-    let companyMarkers = $scope.companyMarkers = [];
-    _.each(list, function(company){
-      _.each(company.locations, function(location){
-        console.log(location)
-        companyMarkers.push({
-          id: company.id,
-          coords: location.coords,
-          company: company
-        });
-      });
-    });
-    console.log(companyMarkers);
-
     $scope.companies = list;
+    $scope.companyMarkers = companiesToMarkers(list);
   });
 
-  $scope.companyClicked = function(marker){
-    console.log(marker);
+  let activeMarker = null;
+  $scope.toggleMarker = function(newMarker){
+    if(activeMarker)
+      activeMarker.icon = Constants.icon.inactive;
+    activeMarker = newMarker;
+    activeMarker.icon = Constants.icon.active;
+  };
+
+  $scope.companyClicked = function(ev){
+    $scope.toggleMarker(ev.model);
+    $scope.showDetails(ev.model.company);
+  };
+
+  $scope.showDetails = function(company){
+    $scope.activeCompany = company;
   };
 }).factory('Companies', function($q){
   function Companies(){
@@ -54,4 +55,37 @@ angular.module('valuesMain', [
   };
 
   return new Companies();
+}).factory('companiesToMarkers', function(Constants){
+  return function (companies){
+    let companyMarkers = [];
+    _.each(companies, function(company){
+      _.each(company.locations, function(location){
+        console.log(location)
+        companyMarkers.push({
+          id: company.id,
+          coords: location.coords,
+          company: company,
+          icon: Constants.icon.inactive
+        });
+      });
+    });
+    return companyMarkers;
+  };
+}).factory('Constants', function(){
+  return {
+    icon: {
+      active: 'icons/neutralCirc.png',
+      inactive: 'icons/activeCirc.png'
+    }
+  };
+}).directive('showDetails', function(){
+  function ShowDetailsCtrl ($scope) {}
+  let scope = {
+    company: '='
+  };
+  return {
+    controller: ShowDetailsCtrl,
+    scope: scope,
+    templateUrl: 'showDetails.html'
+  };
 });

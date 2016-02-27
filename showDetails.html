@@ -1,0 +1,17 @@
+<div ng-if="company" style="width:50%;max-width:300px;position:absolute;right:0;top:0px" class="panel panel-default">
+  <div class="panel-body">
+    <h4>{{company.name}}</h4>
+    <p>
+      Unsere Werte sind:
+    </p>
+    <ul>
+      <li ng-repeat="value in company.values">{{value.name}}</li>
+    </ul>
+    <p>
+      Ihr findet uns bei:
+    </p>
+    <ul>
+      <li ng-repeat="location in company.locations">{{location.coords.latitude}}, {{location.coords.longitude}}</li>
+    </ul>
+  </div>
+</div>
