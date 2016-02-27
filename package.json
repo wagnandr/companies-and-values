@@ -1,0 +1,23 @@
+{
+  "name": "values-webpage",
+  "version": "0.0.1",
+  "description": "A webpage, which enables companies to share their ethical values.",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.13.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wagnandr/companies-and-values.git"
+  },
+  "author": "wagnandr",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wagnandr/companies-and-values/issues"
+  },
+  "homepage": "https://github.com/wagnandr/companies-and-values#readme"
+}
