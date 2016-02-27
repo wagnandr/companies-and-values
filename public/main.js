@@ -79,9 +79,14 @@ angular.module('valuesMain', [
     }
   };
 }).directive('showDetails', function(){
-  function ShowDetailsCtrl ($scope) {}
+  function ShowDetailsCtrl ($scope) {
+    $scope.centerOn = function(coords){
+      if($scope.map) $scope.map.center = _.clone(coords);
+    }
+  }
   let scope = {
-    company: '='
+    company: '=',
+    map: '='
   };
   return {
     controller: ShowDetailsCtrl,

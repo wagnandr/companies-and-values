@@ -11,7 +11,9 @@
       Ihr findet uns bei:
     </p>
     <ul>
-      <li ng-repeat="location in company.locations">{{location.coords.latitude}}, {{location.coords.longitude}}</li>
+      <li ng-repeat="location in company.locations">
+        <a href="#" ng-click="centerOn(location.coords)">{{location.coords.latitude}}, {{location.coords.longitude}}</a>
+      </li>
     </ul>
   </div>
 </div>
