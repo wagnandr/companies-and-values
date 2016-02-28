@@ -119,7 +119,7 @@ angular.module('valuesMain', [
   return {
     controller: ShowDetailsCtrl,
     scope: scope,
-    templateUrl: 'showDetails.html'
+    templateUrl: 'show-details.html'
   };
 }).controller('AddCompanyCtrl', function($scope, $uibModal, Companies){
   function initCompany(){
