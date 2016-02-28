@@ -144,15 +144,16 @@ angular.module('valuesMain', [
     templateUrl: 'main-nav-bar.html'
   };
 }).controller('SelectNewLocation', function($scope, $uibModalInstance, uiGmapIsReady, map){
-  $scope.map = map;
-
+  let center = map.center;
   $scope.idKey = Date.now();
+  $scope.map = map;
 
   // Workaround
   // See: http://stackoverflow.com/questions/28802902/angular-google-maps-not-working-with-templateurl-that-isnt-a-text-ng-template
   $scope.control = {};
   uiGmapIsReady.promise().then(function (maps) {
-    $scope.control.refresh();
+    $scope.map.center = center;
+    $scope.control.refresh(center);
   });
 
   $scope.saveNewLocation = function(){
@@ -171,21 +172,34 @@ angular.module('valuesMain', [
       initNewValue();
     };
 
-    $scope.openNewLocationDialog = function(){
+    const openLocationDialog = function(coords, cb){
+      let defaultCoords = { latitude: 48.14, longitude: 11.6 };
+      let startCoords = coords ? _.clone(coords): defaultCoords;
       var modalInstance = $uibModal.open({
         animation: true,
         templateUrl: 'choose-new-location.html',
         resolve: {
           map: function(){
-            return { center: { latitude: 48.14, longitude: 11.6 }, zoom: 12 };
+            return { center: startCoords, zoom: 12 };
           }
         },
         controller: 'SelectNewLocation',
         size: 'lg'
       });
 
-      modalInstance.result.then(function(coords){
+      modalInstance.result.then(cb);
+    };
+
+    $scope.openNewLocationDialog = function(){
+      openLocationDialog(null, function(coords){
         $scope.company.locations.push({ coords: _.clone(coords)});
+      });
+    };
+
+    $scope.openEditLocationDialog = function(location){
+      openLocationDialog(location.coords, function(coords){
+        console.log(coords);
+        location.coords = coords;
       });
     };
   }

@@ -12,7 +12,7 @@
     </p>
     <ul>
       <li ng-repeat="location in company.locations">
-        <a href="#" ng-click="centerOn(location.coords)">{{location.coords.latitude}}, {{location.coords.longitude}}</a>
+        <a href="" ng-click="centerOn(location.coords)">{{location.coords.latitude | number : 2}}, {{location.coords.longitude | number : 2}}</a>
       </li>
     </ul>
   </div>

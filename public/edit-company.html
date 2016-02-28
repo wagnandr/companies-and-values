@@ -22,7 +22,7 @@
   </ul>
   <ul class="list-group">
     <li class="list-group-item" ng-repeat="location in company.locations">
-      {{location.coords.latitude}}/{{location.coords.longitude}}
+      <a href="" ng-click="openEditLocationDialog(location)">{{location.coords.latitude | number : 2}}/{{location.coords.longitude | number : 2}}</a>
     </li>
     <li class="list-group-item">
       <button ng-click="openNewLocationDialog()" type="button" class="btn btn-default">new location</button>
