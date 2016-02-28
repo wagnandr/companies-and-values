@@ -1,0 +1,10 @@
+<div style="position:relative">
+  <ui-gmap-google-map center='map.center' zoom='map.zoom' control='control' refresh='true'>
+    <ui-gmap-marker
+        idKey='idKey'
+        coords='map.center'
+        options='{draggable: true}'
+        >
+  </ui-gmap-google-map>
+  <button style="position:absolute;top:5px;right:5px;" ng-click="saveNewLocation()" type="button" class="btn btn-success">save</button>
+</div>

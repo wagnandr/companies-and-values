@@ -1,7 +1,32 @@
 <form>
   <div class="form-group">
-    <label for="inputName">Name</label>
+    <label for="inputName" class="sr-only">Name</label>
     <input ng-model="newCompany.name" type="text" class="form-control" id="inputName" placeholder="Company Name">
   </div>
-  <button ng-click="addCompany()" type="submit" class="btn btn-default">Submit</button>
+  <ul class="list-group">
+    <li class="list-group-item" ng-repeat="value in newCompany.values">
+      <div class="form-group">
+        <label for="inputValue{{$index}}" class="sr-only">Value</label>
+        <input ng-model="value.name" type="text" id="newInputValue{{$index}}" class="form-control" placeholder="new value">
+      </div>
+    </li>
+    <li class="list-group-item">
+      <div class="input-group">
+        <label for="newInputValue" class="sr-only">Value</label>
+        <input ng-model="newValue.name" type="text" id="newInputValue" class="form-control" placeholder="new value">
+        <span class="input-group-btn">
+          <button ng-click="addNewValue()" type="submit" class="btn btn-default">add value</button>
+        </span>
+      </div>
+    </li>
+  </ul>
+  <ul class="list-group">
+    <li class="list-group-item" ng-repeat="location in newCompany.locations">
+      {{location.coords.latitude}}/{{location.coords.longitude}}
+    </li>
+    <li class="list-group-item">
+      <button ng-click="openNewLocationDialog()" type="button" class="btn btn-default">new location</button>
+    </li>
+  </ul>
+  <button ng-click="addNewCompany()" type="submit" class="btn btn-default">Submit</button>
 </form>

@@ -17,7 +17,7 @@ angular.module('valuesMain', [
     otherwise({
       redirectTo: '/show-map'
     });
-}]).controller('ShowMapCtrl', function ($scope, Companies, companiesToMarkers, Constants, $uibModal){
+}]).controller('ShowMapCtrl', function ($scope, Companies, companiesToMarkers, Constants){
   const munich = { latitude: 48.14, longitude: 11.6 };
 
   $scope.map = { center: munich, zoom: 12 };
@@ -25,6 +25,11 @@ angular.module('valuesMain', [
   Companies.getList().then((list) => {
     $scope.companies = list;
     $scope.companyMarkers = companiesToMarkers(list);
+
+    // Temporary workaround to synchronize add
+    $scope.$watch(function(){ return list.length; }, function(){
+      $scope.companyMarkers = companiesToMarkers(list);
+    })
   });
 
   let activeMarker = null;
@@ -42,15 +47,6 @@ angular.module('valuesMain', [
 
   $scope.showDetails = function(company){
     $scope.activeCompany = company;
-  };
-
-  $scope.openAddCompanyDialog = function (){
-    var modalInstance = $uibModal.open({
-      animation: true,
-      templateUrl: 'addCompanyDialog.html',
-      controller: 'AddCompanyCtrl',
-      size: 'lg'
-    });
   };
 }).factory('Companies', function($q){
   function Companies(){
@@ -90,11 +86,11 @@ angular.module('valuesMain', [
 }).factory('companiesToMarkers', function(Constants){
   return function (companies){
     let companyMarkers = [];
+    let markerId = 0;
     _.each(companies, function(company){
       _.each(company.locations, function(location){
-        console.log(location)
         companyMarkers.push({
-          id: company.id,
+          id: markerId++,
           coords: location.coords,
           company: company,
           icon: Constants.icon.inactive
@@ -125,21 +121,63 @@ angular.module('valuesMain', [
     scope: scope,
     templateUrl: 'showDetails.html'
   };
-}).controller('AddCompanyCtrl', function($scope, Companies){
-  function init(){
+}).controller('AddCompanyCtrl', function($scope, $uibModal, Companies){
+  function initCompany(){
     $scope.newCompany = {
       locations: [],
       values: []
     };
+    initNewValue();
   }
 
-  init();
+  function initNewValue() {
+    $scope.newValue = {};
+  };
 
-  $scope.addCompany = function(){
-    Companies.add($scope.newCompany).then(init);
-  }
+  initCompany();
+
+  $scope.addNewCompany = function(){
+    Companies.add($scope.newCompany).then(initCompany);
+  };
+
+  $scope.addNewValue = function(){
+    $scope.newCompany.values.push($scope.newValue);
+    initNewValue();
+  };
+
+  $scope.openNewLocationDialog = function(){
+    var modalInstance = $uibModal.open({
+      animation: true,
+      templateUrl: 'choose-new-location.html',
+      resolve: {
+        map: function(){
+          return { center: { latitude: 48.14, longitude: 11.6 }, zoom: 12 };
+        }
+      },
+      controller: 'SelectNewLocation',
+      size: 'lg'
+    });
+    modalInstance.result.then(function(coords){
+      $scope.newCompany.locations.push({ coords: _.clone(coords)});
+    })
+  };
 }).directive('mainNavBar', function(){
   return {
     templateUrl: 'main-nav-bar.html'
+  };
+}).controller('SelectNewLocation', function($scope, $uibModalInstance, uiGmapIsReady, map){
+  $scope.map = map;
+
+  $scope.idKey = Date.now();
+
+  // Workaround
+  // See: http://stackoverflow.com/questions/28802902/angular-google-maps-not-working-with-templateurl-that-isnt-a-text-ng-template
+  $scope.control = {};
+  uiGmapIsReady.promise().then(function (maps) {
+    $scope.control.refresh();
+  });
+
+  $scope.saveNewLocation = function(){
+    $uibModalInstance.close(map.center);
   };
 });
