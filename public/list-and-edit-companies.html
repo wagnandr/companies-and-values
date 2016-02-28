@@ -1,0 +1,13 @@
+<div ng-if='companies[indexActive]' class="panel panel-default">
+  <div class="panel-body">
+    <edit-company company='companies[indexActive]'></edit-company>
+  </div>
+</div>
+<div class="list-group">
+  <a href="#/list-and-edit-companies" class="list-group-item" ng-repeat='company in companies' ng-click='setActive($index)'>
+    <h4 class="list-group-item-heading">{{company.name}}</h4>
+    <p class="list-group-item-text">
+      <span ng-repeat='value in company.values'>{{value.name}}, </span>
+    </p>
+  </a>
+</div>

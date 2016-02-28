@@ -14,6 +14,10 @@ angular.module('valuesMain', [
       templateUrl: 'add-company.html',
       controller: 'AddCompanyCtrl'
     }).
+    when('/list-and-edit-companies', {
+      templateUrl: 'list-and-edit-companies.html',
+      controller: 'ListAndEditCompaniesCtrl'
+    }).
     otherwise({
       redirectTo: '/show-map'
     });
@@ -190,5 +194,12 @@ angular.module('valuesMain', [
     controller: EditCompanyCtrl,
     scope: { company: '=' },
     templateUrl: 'edit-company.html'
+  };
+}).controller('ListAndEditCompaniesCtrl', function($scope, Companies){
+  Companies.getList().then((list) => {
+    $scope.companies = list;
+  });
+  $scope.setActive = function(index){
+    $scope.indexActive = index;
   };
 });
