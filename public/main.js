@@ -121,17 +121,12 @@ angular.module('valuesMain', [
     scope: scope,
     templateUrl: 'show-details.html'
   };
-}).controller('AddCompanyCtrl', function($scope, $uibModal, Companies){
-  function initCompany(){
+}).controller('AddCompanyCtrl', function($scope, Companies){
+  const initCompany = function(){
     $scope.newCompany = {
       locations: [],
       values: []
     };
-    initNewValue();
-  }
-
-  function initNewValue() {
-    $scope.newValue = {};
   };
 
   initCompany();
@@ -140,27 +135,6 @@ angular.module('valuesMain', [
     Companies.add($scope.newCompany).then(initCompany);
   };
 
-  $scope.addNewValue = function(){
-    $scope.newCompany.values.push($scope.newValue);
-    initNewValue();
-  };
-
-  $scope.openNewLocationDialog = function(){
-    var modalInstance = $uibModal.open({
-      animation: true,
-      templateUrl: 'choose-new-location.html',
-      resolve: {
-        map: function(){
-          return { center: { latitude: 48.14, longitude: 11.6 }, zoom: 12 };
-        }
-      },
-      controller: 'SelectNewLocation',
-      size: 'lg'
-    });
-    modalInstance.result.then(function(coords){
-      $scope.newCompany.locations.push({ coords: _.clone(coords)});
-    })
-  };
 }).directive('mainNavBar', function(){
   return {
     templateUrl: 'main-nav-bar.html'
@@ -179,5 +153,42 @@ angular.module('valuesMain', [
 
   $scope.saveNewLocation = function(){
     $uibModalInstance.close(map.center);
+  };
+}).directive('editCompany', function(){
+  function EditCompanyCtrl($scope, $uibModal){
+    const initNewValue = function() {
+      $scope.newValue = {};
+    };
+
+    initNewValue();
+
+    $scope.addNewValue = function(){
+      $scope.company.values.push($scope.newValue);
+      initNewValue();
+    };
+
+    $scope.openNewLocationDialog = function(){
+      var modalInstance = $uibModal.open({
+        animation: true,
+        templateUrl: 'choose-new-location.html',
+        resolve: {
+          map: function(){
+            return { center: { latitude: 48.14, longitude: 11.6 }, zoom: 12 };
+          }
+        },
+        controller: 'SelectNewLocation',
+        size: 'lg'
+      });
+
+      modalInstance.result.then(function(coords){
+        $scope.company.locations.push({ coords: _.clone(coords)});
+      });
+    };
+  }
+
+  return {
+    controller: EditCompanyCtrl,
+    scope: { company: '=' },
+    templateUrl: 'edit-company.html'
   };
 });
