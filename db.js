@@ -5,6 +5,16 @@ const _ = require('lodash');
 
 const connectionString = process.env.DATABASE_URL;
 
+const executeQuery = function(queryString, successHandler, errorHandler){
+  pg.connect(connectionString, function (err, client, done) {
+    if(err) throw err;
+    client.query(queryString, [], function(err, result) {
+      done();
+      if(err) throw err;
+    })
+  });
+};
+
 const companyRowsToJson = function(companyRows){
   let companies = {};
   _.each(companyRows, function(row){
@@ -124,6 +134,7 @@ const deleteCompany = function(company, successHandler){
 };
 
 module.exports = {
+  executeQuery: executeQuery,
   deleteCompany: deleteCompany,
   updateCompany: updateCompany,
   createCompany: createCompany,
