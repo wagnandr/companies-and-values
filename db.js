@@ -11,6 +11,7 @@ const executeQuery = function(queryString, successHandler, errorHandler){
     client.query(queryString, [], function(err, result) {
       done();
       if(err) throw err;
+      successHandler && successHandler();
     })
   });
 };
@@ -89,34 +90,34 @@ const createCompany = function(company, successHandler, errorHandler){
 };
 
 const updateValue = function(client, value, successHandler){
-    client.query('update table value set name = $1 where id = $2', [value.name, value.id], function(err, result){
+    client.query('update value set name = $1 where id = $2', [value.name, value.id], function(err, result){
       if(err) throw err;
       return successHandler && successHandler();
     });
 };
 
 const updateLocation = function(client, location, successHandler){
-    client.query('update table location set latitude = $1, longitude = $2 where id = $2', [location.latitude, location.longitude, location.id], function(err, result){ if(err) throw err;
+    client.query('update location set latitude = $1, longitude = $2 where id = $3', [location.coords.latitude, location.coords.longitude, location.id], function(err, result){ if(err) throw err;
       if(err) throw err;
       return successHandler && successHandler();
     });
 };
 
-const updateCompany = function(company, successHandler){
+const updateCompany = function(company, successHandler, errorHandler){
   pg.connect(connectionString, function (err, client, done) {
     if(err) throw err;
-    client.query('update table company set name = $1 where id = $2', [company.name, company.id], function(err, result){
+    client.query('update company set name = $1 where id = $2', [company.name, company.id], function(err, result){
       const afterUpdate = _.after(company.values.length + company.locations.length, function(){
         done();
         successHandler && successHandler();
       });
 
       _.each(company.values, function(value){
-        updateValue(client, value, updateInsertion);
+        updateValue(client, value, afterUpdate);
       });
 
       _.each(company.locations, function(location){
-        updateLocation(client, location, updateInsertion);
+        updateLocation(client, location, afterUpdate);
       });
     });
   });

@@ -52,38 +52,39 @@ angular.module('valuesMain', [
   $scope.showDetails = function(company){
     $scope.activeCompany = company;
   };
-}).factory('Companies', function($q){
+}).factory('Companies', function($q, $http){
   function Companies(){
-    this.list = [{
-      id: 0,
-      name: 'Pausenverkauf',
-      values: [{
-        name: 'Gesunde Ernährung'
-      },{
-        name: 'Zufriedene Kunden'
-      }],
-      locations: [{
-        coords: {
-          latitude: 48.14,
-          longitude: 11.6
-        }
-      }]
-    }];
+    this.list = [];
   }
 
   Companies.prototype.getList = function () {
     const self = this;
     return $q(function(resolve, reject) {
-      resolve(self.list);
+      $http.get('/api/company/listall').then(function(res){
+        self.list = res.data;
+        resolve(self.list);
+      }, reject);
     });
   };
 
   Companies.prototype.add = function(company){
     const self = this;
     return $q(function(resolve, reject) {
-      self.list.push(_.clone(company));
-      resolve();
+      $http.post('/api/company/create', company).then(function(req, res){
+        self.list.push(_.clone(company));
+        resolve();
+      });
     });
+  };
+
+  Companies.prototype.update = function(company){
+    const self = this;
+    return $q(function(resolve, reject) {
+      $http.post('/api/company/update', company).then(function(req, res){
+        resolve();
+      });
+    });
+
   };
 
   return new Companies();
@@ -198,7 +199,6 @@ angular.module('valuesMain', [
 
     $scope.openEditLocationDialog = function(location){
       openLocationDialog(location.coords, function(coords){
-        console.log(coords);
         location.coords = coords;
       });
     };
@@ -215,5 +215,10 @@ angular.module('valuesMain', [
   });
   $scope.setActive = function(index){
     $scope.indexActive = index;
+  };
+  $scope.saveChanges = function(){
+    Companies.update($scope.companies[$scope.indexActive]).then(function(){
+      console.log('saved');
+    });
   };
 });

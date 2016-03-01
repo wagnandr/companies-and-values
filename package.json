@@ -4,6 +4,7 @@
   "description": "A webpage, which enables companies to share their ethical values.",
   "main": "server.js",
   "dependencies": {
+    "body-parser": "^1.15.0",
     "bower": "^1.7.7",
     "express": "^4.13.4",
     "lodash": "^4.5.1",

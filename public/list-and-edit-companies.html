@@ -1,6 +1,7 @@
 <div ng-if='companies[indexActive]' class="panel panel-default">
   <div class="panel-body">
     <edit-company company='companies[indexActive]'></edit-company>
+    <button ng-click="saveChanges()" class="btn btn-primary">Save changes</button>
   </div>
 </div>
 <div class="list-group">

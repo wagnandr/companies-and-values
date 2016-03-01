@@ -29,7 +29,19 @@
   <body>
     <div ng-app="valuesMain">
       <main-nav-bar></main-nav-bar>
+      <div class="alert alert-danger" role="alert">
+        <em>Demo-Mode:</em> Just for testing purposes! Database gets automatically wiped every 15 minutes.
+      </div>
       <div ng-view></div>
+    </div>
+    <div style="padding:1em;">
+      <h4>Impressum</h4>
+      <address>
+        <strong>Andreas Wagner</strong><br>
+        Daiserstrasse 26b<br>
+        81371 München<br>
+        <abbr title="E-Mail">Mail:</abbr> wagnandr at in punkt tum punkt de
+      </address>
     </div>
   </body>
 </html>
