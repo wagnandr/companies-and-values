@@ -113,11 +113,17 @@ const updateCompany = function(company, successHandler, errorHandler){
       });
 
       _.each(company.values, function(value){
-        updateValue(client, value, afterUpdate);
+        if(value.id)
+          updateValue(client, value, afterUpdate);
+        else
+          insertValue(client, company.id, value, afterUpdate);
       });
 
       _.each(company.locations, function(location){
-        updateLocation(client, location, afterUpdate);
+        if(location.id)
+          updateLocation(client, location, afterUpdate);
+        else
+          insertLocation(client, company.id, location, afterUpdate);
       });
     });
   });
