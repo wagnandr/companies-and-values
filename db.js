@@ -49,6 +49,44 @@ const getAllCompanies = function(successHandler, errorHandler){
   });
 };
 
+const getCompany = function(id, successHandler){
+  pg.connect(connectionString, function (err, client, done) {
+    if(err) throw err;
+    const queryString =
+      'select c.id as id, c.name, l.id as lid, l.latitude, l.longitude, v.id as vid, v.name as value ' +
+      'from company c, location l, value v '+
+      'where c.id = l.company_id and c.id = v.company_id and c.id = $1';
+    client.query(queryString, [id], function(err, result) {
+      done();
+      if(err) throw err;
+      successHandler(companyRowsToJson(result.rows));
+    });
+  });
+};
+
+const locationRowToJson = function(row){
+  return {
+    id: row.id,
+    company_id: row.company_id,
+    coords: {
+      latitude: row.latitude,
+      longitude: row.longitude
+    }
+  };
+};
+
+const getAllLocations = function(successHandler){
+  pg.connect(connectionString, function (err, client, done) {
+    if(err) throw err;
+    const queryString = 'select * from location'
+    client.query(queryString, [], function(err, result) {
+      done();
+      if(err) throw err;
+      successHandler(_.map(result.rows, locationRowToJson));
+    });
+  });
+};
+
 const insertValue = function(client, company_id, value, successHandler){
   const insertValueString = 'insert into value (name, company_id) values ($1, $2) returning id'
   client.query(insertValueString, [value.name, company_id], function(err, result){
@@ -145,5 +183,7 @@ module.exports = {
   deleteCompany: deleteCompany,
   updateCompany: updateCompany,
   createCompany: createCompany,
-  getAllCompanies: getAllCompanies
+  getAllCompanies: getAllCompanies,
+  getCompany: getCompany,
+  getAllLocations: getAllLocations
 };

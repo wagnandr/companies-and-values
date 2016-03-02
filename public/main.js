@@ -21,19 +21,15 @@ angular.module('valuesMain', [
     otherwise({
       redirectTo: '/show-map'
     });
-}]).controller('ShowMapCtrl', function ($scope, Companies, companiesToMarkers, Constants){
+}]).controller('ShowMapCtrl', function ($scope, Locations, Companies, locationsToMarkers, Constants){
   const munich = { latitude: 48.14, longitude: 11.6 };
 
   $scope.map = { center: munich, zoom: 12 };
 
-  Companies.getList().then((list) => {
-    $scope.companies = list;
-    $scope.companyMarkers = companiesToMarkers(list);
-
-    // Temporary workaround to synchronize add
-    $scope.$watch(function(){ return list.length; }, function(){
-      $scope.companyMarkers = companiesToMarkers(list);
-    })
+  Locations.getAll().then((list) => {
+    locationsToMarkers(list);
+    $scope.locationMarkers = list;
+    console.log($scope.locationMarkers);
   });
 
   let activeMarker = null;
@@ -44,24 +40,55 @@ angular.module('valuesMain', [
     activeMarker.icon = Constants.icon.active;
   };
 
-  $scope.companyClicked = function(ev){
+  $scope.markerClicked = function(ev){
     $scope.toggleMarker(ev.model);
-    $scope.showDetails(ev.model.company);
+    $scope.showDetails(ev.model.company_id);
   };
 
-  $scope.showDetails = function(company){
-    $scope.activeCompany = company;
+  $scope.showDetails = function(company_id){
+    Companies.get(company_id).then(function(company){
+      console.log(company);
+      $scope.activeCompany = company;
+    });
   };
+}).factory('Locations', function($q, $http){
+  function Locations(){}
+
+  Locations.prototype.getAll = function(){
+    const self = this;
+    return $q(function(resolve, reject) {
+      $http.get('/api/location/listall').then(function(res){
+        if(res.data.status == 'success'){
+          return resolve(res.data.locations);
+        } else {
+          return reject(res.data.error);
+        }
+      });
+    });
+  };
+
+  return new Locations();
 }).factory('Companies', function($q, $http){
-  function Companies(){
-    this.list = [];
-  }
+  function Companies(){}
+
+  Companies.prototype.get = function(id){
+    const self = this;
+    return $q(function(resolve, reject) {
+      $http.get('/api/company/'+id).then(function(res){
+        if(res.data.status == 'success'){
+          return resolve(res.data.company);
+        } else {
+          return reject(res.data.error);
+        }
+
+      });
+    });
+  };
 
   Companies.prototype.getList = function () {
     const self = this;
     return $q(function(resolve, reject) {
       $http.get('/api/company/listall').then(function(res){
-        self.list = res.data;
         resolve(self.list);
       }, reject);
     });
@@ -71,7 +98,6 @@ angular.module('valuesMain', [
     const self = this;
     return $q(function(resolve, reject) {
       $http.post('/api/company/create', company).then(function(req, res){
-        self.list.push(_.clone(company));
         resolve();
       });
     });
@@ -88,21 +114,11 @@ angular.module('valuesMain', [
   };
 
   return new Companies();
-}).factory('companiesToMarkers', function(Constants){
-  return function (companies){
-    let companyMarkers = [];
-    let markerId = 0;
-    _.each(companies, function(company){
-      _.each(company.locations, function(location){
-        companyMarkers.push({
-          id: markerId++,
-          coords: location.coords,
-          company: company,
-          icon: Constants.icon.inactive
-        });
-      });
+}).factory('locationsToMarkers', function(Constants){
+  return function(locations){
+    _.each(locations, function(location){
+      location.icon = Constants.icon.inactive;
     });
-    return companyMarkers;
   };
 }).factory('Constants', function(){
   return {

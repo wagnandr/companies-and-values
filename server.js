@@ -40,6 +40,18 @@ app.post('/api/company/update', function(req, res){
   })
 });
 
+app.get('/api/location/listall', function(req, res){
+  db.getAllLocations(function(locations){
+    res.json({status: 'success', locations: locations});
+  });
+});
+
+app.get('/api/company/:id', function(req, res){
+  db.getCompany(req.params.id, function(company){
+    res.json({status: 'success', company: company[0]});
+  });
+});
+
 app.listen(app.get('port'), function () {
   console.log('Listening on port ' + app.get('port') + '!');
   demo.activateDemoMode();
