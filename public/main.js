@@ -89,7 +89,7 @@ angular.module('valuesMain', [
     const self = this;
     return $q(function(resolve, reject) {
       $http.get('/api/company/listall').then(function(res){
-        resolve(self.list);
+        resolve(res.data);
       }, reject);
     });
   };

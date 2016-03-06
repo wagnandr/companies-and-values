@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -6,8 +8,8 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 
 
-const db = require('./db');
 const User = require('./User');
+const Company = require('./Company');
 const demo = require('./demo');
 
 app.set('port', (process.env.PORT || 5000));
@@ -30,11 +32,11 @@ passport.use(new LocalStrategy(
   }
 ));
 
-passport.serializeUser(function(user, done) {
+passport.serializeUser((user, done) => {
     done(null, user.id);
 });
 
-passport.deserializeUser(function(id, done) {
+passport.deserializeUser((id, done) => {
   User.findById(id, (err, user) => {
     done(err, user);
   });
@@ -63,48 +65,63 @@ app.post('/login',
     res.json(req.user);
 });
 
-app.post('/logout', function(req, res){
-  req.logOut(); res.send(200);
+app.post('/logout', (req, res) => {
+  req.logOut();
+  res.send(200);
 });
 
 
-app.get('/api/company/listall', function(req, res){
-  db.getAllCompanies(function(companies){
+app.get('/api/company/listall', (req, res) => {
+  Company.findAll((err, companies) => {
+    if(err){
+      console.log(err)
+      return res.status(500).json({status: 'error', error: err})
+    }
     res.json(companies);
-  }, function(err){
-    res.json({status: 'error', error: err})
   })
 });
 
-app.post('/api/company/create', function(req, res){
-  db.createCompany(req.body, function(){
+app.post('/api/company/create', (req, res) => {
+  Company.create(req.body, (err) => {
+    if(err){
+      console.log(err)
+      return res.status(500).json({status: 'error', error: err})
+    }
     res.json({status: 'success'});
-  }, function(err){
-    res.json({status: 'error', error: err});
-  })
+  });
 });
 
-app.post('/api/company/update', function(req, res){
-  db.updateCompany(req.body, function(){
+app.post('/api/company/update', (req, res) => {
+  Company.update(req.body, (err) => {
+    if(err){
+      console.log(err)
+      return res.status(500).json({status: 'error', error: err})
+    }
     res.json({status: 'success'});
-  }, function(err){
-    res.json({status: 'error', error: err});
-  })
+  });
 });
 
-app.get('/api/location/listall', function(req, res){
-  db.getAllLocations(function(locations){
+app.get('/api/location/listall', (req, res) => {
+  Company.findAllLocations((err, locations) => {
+    if(err){
+      console.log(err)
+      return res.status(500).json({status: 'error', error: err})
+    }
     res.json({status: 'success', locations: locations});
   });
 });
 
-app.get('/api/company/:id', function(req, res){
-  db.getCompany(req.params.id, function(company){
+app.get('/api/company/:id', (req, res) => {
+  Company.findById(req.params.id, (err, company) => {
+    if(err){
+      console.log(err)
+      return res.status(500).json({status: 'error', error: err})
+    }
     res.json({status: 'success', company: company[0]});
   });
 });
 
-app.listen(app.get('port'), function () {
+app.listen(app.get('port'), () => {
   console.log('Listening on port ' + app.get('port') + '!');
   demo.activateDemoMode();
 });
