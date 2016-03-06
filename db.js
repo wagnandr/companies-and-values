@@ -185,5 +185,6 @@ module.exports = {
   createCompany: createCompany,
   getAllCompanies: getAllCompanies,
   getCompany: getCompany,
-  getAllLocations: getAllLocations
+  getAllLocations: getAllLocations,
+  connect: (cb) => { pg.connect(connectionString, cb); }
 };

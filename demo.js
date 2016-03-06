@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const db = require('./db');
+const User = require('./User');
 
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 
@@ -43,6 +44,9 @@ const wipe = function(){
 
     db.createCompany(TanteEmmaLaden);
     db.createCompany(Pausenverkauf);
+
+    User.create('user123', 'password123', (e, user) => { if(e) throw e; });
+
   });
 };
 
