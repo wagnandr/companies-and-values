@@ -170,6 +170,7 @@ angular.module('valuesMain', [
 
 }).directive('mainNavBar', function(){
   return {
+    controller: function($scope, User){ $scope.user = User; },
     templateUrl: 'main-nav-bar.html'
   };
 }).controller('SelectNewLocation', function($scope, $uibModalInstance, uiGmapIsReady, map){
