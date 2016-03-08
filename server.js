@@ -70,6 +70,18 @@ app.post('/logout', (req, res) => {
   res.send(200);
 });
 
+app.post('/register', (req, res, next) => {
+  User.create(req.body.username, req.body.password, (e, user) => {
+    if(e){
+      console.log(e);
+      return res.status(500).json({status: 'error', error: e});
+    }
+    next();
+  });},
+  passport.authenticate('local'),
+  (req, res) => {
+    res.json(req.user);
+});
 
 app.get('/api/company/listall', (req, res) => {
   Company.findAll((err, companies) => {

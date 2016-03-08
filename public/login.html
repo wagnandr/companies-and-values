@@ -1,0 +1,15 @@
+<div class="alert" ng-class="{'alert-success': msg.type == 'success', 'alert-danger': msg.type == 'failure'}" role="alert" ng-if="msg">
+    {{msg.text}}
+</div>
+
+<form>
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input type="text" class="form-control" id="username" ng-model="username" placeholder="Username">
+  </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input type="password" class="form-control" id="password" ng-model="password" placeholder="Password">
+  </div>
+  <button type="submit" class="btn btn-default" ng-click="login()">Login</button>
+</form>

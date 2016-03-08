@@ -18,6 +18,18 @@ angular.module('valuesMain', [
       templateUrl: 'list-and-edit-companies.html',
       controller: 'ListAndEditCompaniesCtrl'
     }).
+    when('/login', {
+      templateUrl: 'login.html',
+      controller: 'LoginCtrl'
+    }).
+    when('/logout', {
+      templateUrl: 'logout.html',
+      controller: 'LogoutCtrl'
+    }).
+    when('/register', {
+      templateUrl: 'register.html',
+      controller: 'RegisterCtrl'
+    }).
     otherwise({
       redirectTo: '/show-map'
     });
@@ -237,4 +249,86 @@ angular.module('valuesMain', [
       console.log('saved');
     });
   };
+}).factory('User', function($q, $http){
+  function User(){
+    this.username;
+    this.isLoggedIn = false;
+  };
+
+  User.prototype.login = function(username, password){
+    const self = this;
+    return $q(function(resolve, reject){
+      $http.post('login', {username: username, password: password}).then(function(res){
+        self.isLoggedIn = true;
+        self.username = username;
+        resolve(res.data);
+      }).catch(function(res){
+        self.isLoggeIn = false
+        reject(res.data);
+      });
+    });
+  };
+
+  User.prototype.logout = function(){
+    const self = this;
+    return $q(function(resolve, reject){
+      $http.post('/logout').then(function(res){
+        self.isLoggedIn = false
+        self.username = null;
+        resolve();
+      }, reject);
+    });
+  };
+
+  User.prototype.register = function(username, password){
+    const self = this;
+    return $q(function(resolve, reject){
+      $http.post('/register', {username: username, password: password}).then(function(res){
+        self.isLoggedIn = false
+        self.username = null;
+        resolve();
+      }, reject);
+    });
+
+  };
+
+  return new User();
+}).controller('LoginCtrl', function($scope, User) {
+  $scope.login = function() {
+    User.login($scope.username, $scope.password).then(function (message) {
+      $scope.msg = {
+        text: 'You are successfully logged in.',
+        type: 'success'
+      };
+    }).catch(function(message){
+      $scope.msg = {
+        text: 'Login failed: ' + message,
+        type: 'failure'
+      };
+    });
+  };
+}).controller('LogoutCtrl', function($scope, $location, User) {
+  User.logout().then(function(){
+    $location.path('/');
+  });
+}).controller('RegisterCtrl', function($scope, User){
+  $scope.register= function(){
+    if($scope.password != $scope.passwordConfirm)
+      return $scope.msg = {
+        text: 'Password and password confirmation must match.',
+        type: 'failure'
+      };
+
+    User.register($scope.username, $scope.password).then(function(msg){
+      $scope.msg = {
+        text: 'You were successfully registered!',
+        type: 'success'
+      };
+    }).catch(function(msg){
+      $scope.msg = {
+        text: 'Registration failed: '+msg,
+        type: 'failure'
+      };
+    });
+  }
 });
