@@ -17,7 +17,7 @@ describe('Company', function (){
   };
 
   const CompanyA = {
-    name: 'A bare company',
+    name: 'CompanyA',
     locations: [{
       coords: {
         latitude: 42,
@@ -64,11 +64,102 @@ describe('Company', function (){
         assert(company.id, 'valid id');
         assert.equal(CompanyA.locations.length, company.locations.length, 'locations same size');
         assert.equal(CompanyA.values.length, company.values.length, 'values same size');
-        console.log(company.locations);
         assert(_.every(company.locations, (l) => _.isNumber(l.id)), 'valid locations');
         assert(_.every(company.values, (v) => _.isNumber(v.id)), 'valid values');
         done();
       });
     });
+  });
+
+  describe('findById', () => {
+    it('should return the company with its locations and values', (done) => {
+      Company.create(CompanyA, testUser1, (e, company) => {
+        Company.findById(company.id, (e, foundCompany) => {
+          assert(!e, 'no error');
+          assert.equal(foundCompany.id, company.id, 'valid id');
+          assert.equal(foundCompany.locations.length, CompanyA.locations.length, 'locations found');
+          assert.equal(foundCompany.values.length, CompanyA.values.length, 'values found');
+          done();
+        });
+      });
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete the company', (done) => {
+      Company.create(CompanyA, testUser1, (e, company) => {
+        assert(!e, 'no creating');
+        Company.delete(company, (e) => {
+          assert(!e, 'no error');
+          Company.findById(company.id, (e, foundCompany) => {
+            assert(!e, 'no error finding');
+            assert(!foundCompany);
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  describe('update', ()=> {
+    const companyToModifyBlueprint = CompanyA;
+    let companyToModify;
+
+    beforeEach((done) => {
+      Company.create(_.clone(companyToModifyBlueprint), testUser1, (e, company) => {
+        assert(!e);
+        companyToModify = company;
+        done();
+      });
+    });
+
+    afterEach((done) => {
+      Company.delete(companyToModify, done);
+    });
+
+    it('should update the company name', (done) => {
+        const CompanyAModified = _.clone(companyToModifyBlueprint);
+        const modifiedName = CompanyAModified.name = 'modifiedA'
+        Company.update(CompanyAModified, testUser1, (e, company) => {
+          Company.findById(company.id, (e, foundCompany) => {
+            assert.equal(foundCompany.name, modifiedName, 'modified name correct');
+            done();
+          });
+        });
+    });
+
+    it('should update existing locations', (done) => {
+        const modification = _.clone(companyToModify);
+        modification.locations[0].coords.latitude = 333;
+        const modifiedLocation = modification.locations[0];
+        Company.update(modification, testUser1, (e, company) => {
+          assert(!e, 'no error updating')
+          Company.findById(modification.id, (e, foundCompany) => {
+            assert(!e, 'no finding')
+            assert(_.some(foundCompany.locations, (location) => {
+              return (location.id == modifiedLocation.id) && (location.coords.latitude == 333);
+            }), 'location was modified');
+            done();
+          });
+        });
+    });
+
+    it('should update existing values', (done) => {
+        const modification = _.clone(companyToModify);
+        modification.values[0].name = 'modified value';
+        const modifiedValue = modification.values[0];
+        Company.update(modification, testUser1, (e, company) => {
+          assert(!e, 'no error updating')
+          Company.findById(modification.id, (e, foundCompany) => {
+            assert(!e, 'no finding')
+            assert(_.some(foundCompany.values, (value) => {
+              console.log(value)
+              return (value.id == modifiedValue.id) && (value.name == 'modified value');
+            }), 'location was modified');
+            done();
+          });
+        });
+    });
+
   });
 });

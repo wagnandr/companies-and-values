@@ -139,7 +139,7 @@ app.get('/api/company/:id', (req, res) => {
       console.log(err)
       return res.status(500).json({status: 'error', error: err})
     }
-    res.json({status: 'success', company: company[0]});
+    res.json({status: 'success', company: company});
   });
 });
 

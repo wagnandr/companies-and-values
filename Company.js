@@ -42,13 +42,13 @@ const findCompanyById = (id, cb) => {
   db.connect((e, client, done) => {
     if(e) return cb(e);
     const queryString =
-      'select c.id as id, c.name, l.id as lid, l.latitude, l.longitude, v.id as vid, v.name as value ' +
-      'from company c, location l, value v '+
-      'where c.id = l.company_id and c.id = v.company_id and c.id = $1';
+      `select c.id as id, c.name, l.id as lid, l.latitude, l.longitude, v.id as vid, v.name as value
+      from company c, location l, value v
+      where c.id = l.company_id and c.id = v.company_id and c.id = $1`;
     client.query(queryString, [id], (e, result) => {
       done();
       if(e) return cb(e);
-      return cb(e, companyRowsToJson(result.rows));
+      return cb(e, companyRowsToJson(result.rows)[0]);
     });
   });
 };
@@ -228,10 +228,11 @@ const updateCompany = (company, user, cb) => {
     isUserAllowedToModifyCompany(client, user, company.id, (e, permitted) => {
       client.query('update company set name = $1 where id = $2', [company.name, company.id], (e, result) => {
         if(e) { done(); return cb(e); }
-        updateLocationsAndValuesSafe(client, user, company, company.locations, company.values, (e, results) => {
+        updateLocationsAndValuesSafe(client, user, company, company.locations, company.values, (e, res) => {
           done();
           if(e) return cb(e);
-          return cb && cb(e, results);
+          Object.assign(company, res[0], res[1])
+          return cb && cb(e, company);
         });
       });
     });
