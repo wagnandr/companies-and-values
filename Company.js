@@ -5,16 +5,6 @@ const doAsync = require('async');
 
 const db = require('./db');
 
-const collectErrorsAndResults = (cb) => {
-  let error;
-  let results = [];
-  return (e, result) => {
-    if(e) error = e;
-    if(result) results.push(result);
-    return cb(error, results);
-  };
-};
-
 const companyRowsToJson = (companyRows) => {
   let companies = {};
   _.each(companyRows, function(row){
@@ -99,7 +89,7 @@ const insertValue = (client, company_id, value, cb) => {
   const insertValueString = 'insert into value (name, company_id) values ($1, $2) returning id'
   client.query(insertValueString, [value.name, company_id], (e, result) => {
     if(e) return cb(e);
-    value.id = result.rows[0];
+    value.id = result.rows[0].id;
     value.company_id = company_id;
     return cb(e, value);
   });
@@ -109,32 +99,45 @@ const insertLocation = (client, company_id, location, cb) => {
   const insertLocationString = 'insert into location (latitude, longitude, company_id) values ($1, $2, $3) returning id'
   client.query(insertLocationString, [location.coords.latitude, location.coords.longitude, company_id], (e, result) => {
     if(e) return cb(e);
-    location.id = result.rows[0];
+    location.id = result.rows[0].id;
     location.company_id = company_id;
     return cb(e, location);
   });
 };
 
+const createLocations = (client, company_id, locationList, cb) => {
+  return doAsync.map(locationList, _.curry(insertLocation)(client, company_id), (e, res) => {
+    cb(e, {locations: res});
+  });
+};
+
+const createValues = (client, company_id, valueList, cb) => {
+  return doAsync.map(valueList, _.curry(insertValue)(client, company_id), (e, res) => {
+    cb(e, {values: res});
+  });
+};
+
+const createValuesAndLocations = (client, company_id, locationList, valueList, cb) => {
+  return doAsync.parallel([
+    _.curry(createLocations)(client, company_id, locationList),
+    _.curry(createValues)(client, company_id, valueList),
+  ], (e, res) => {
+    cb(e, res);
+  });
+};
+
 const createCompany = (company, user, cb) => {
   db.connect((e, client, done) => {
-    if(e) return cb(e);
+    if(e) { done(); return cb(e); }
     client.query('insert into company (name, creator_id) values ($1, $2) returning id', [company.name, user.id], function(e, result){
-      if(e) return cb(e);
+      if(e) { done(); return cb(e); }
       const id = company.id = result.rows[0].id;
 
-      const afterInsertion = collectErrorsAndResults(
-        _.after(company.values.length + company.locations.length, (e, results) => {
-          done();
-          if(e) return cb(e);
-          return cb && cb(e);
-      }));
-
-      _.each(company.values, function(value){
-        insertValue(client, id, value, afterInsertion);
-      });
-
-      _.each(company.locations, function(location){
-        insertLocation(client, id, location, afterInsertion);
+      createValuesAndLocations(client, id, company.locations, company.values, (e, res) => {
+        done();
+        if(e) return cb(e);
+        Object.assign(company, res[0], res[1]);
+        return cb(e, company);
       });
     });
   });
