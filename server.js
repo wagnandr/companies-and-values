@@ -114,7 +114,7 @@ app.post('/api/company/create', passIfAuthenticated, (req, res) => {
 });
 
 app.post('/api/company/update', passIfAuthenticated, (req, res) => {
-  Company.update(req.body, (err) => {
+  Company.update(req.body, req.user, (err) => {
     if(err){
       console.log(err)
       return res.status(500).json({status: 'error', error: err})

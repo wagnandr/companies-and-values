@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const doAsync = require('async');
 
 const db = require('./db');
 
@@ -12,7 +13,7 @@ const collectErrorsAndResults = (cb) => {
     if(result) results.push(result);
     return cb(error, results);
   };
-}
+};
 
 const companyRowsToJson = (companyRows) => {
   let companies = {};
@@ -42,7 +43,7 @@ const findAllCompanies = (cb) => {
     client.query(queryString, [], function(e, result) {
       done();
       if(e) return cb(e);
-      cb(e, companyRowsToJson(result.rows));
+      return cb(e, companyRowsToJson(result.rows));
     });
   });
 };
@@ -57,7 +58,7 @@ const findCompanyById = (id, cb) => {
     client.query(queryString, [id], (e, result) => {
       done();
       if(e) return cb(e);
-      cb(e, companyRowsToJson(result.rows));
+      return cb(e, companyRowsToJson(result.rows));
     });
   });
 };
@@ -77,11 +78,20 @@ const findAllLocations = (cb) => {
   db.connect((e, client, done) => {
     if(e) return cb(e);
     const queryString = 'select * from location'
-    client.query(queryString, [], function(err, result) {
+    client.query(queryString, [], function(e, result) {
       done();
       if(e) return cb(e);
-      cb(e, _.map(result.rows, locationRowToJson));
+      return cb(e, _.map(result.rows, locationRowToJson));
     });
+  });
+};
+
+const isUserAllowedToModifyCompany = (client, user, company_id, cb) => {
+  const q = `select c.id from company c, localuser u
+    where u.id = c.creator_id and c.id = $1 and c.creator_id = $2`;
+  client.query(q, [company_id, user.id], function(e, result) {
+    if(e) return cb(e);
+    return cb(e, result.rows.length != 0);
   });
 };
 
@@ -133,40 +143,93 @@ const createCompany = (company, user, cb) => {
 const updateValue = (client, value, cb) => {
     client.query('update value set name = $1 where id = $2', [value.name, value.id], (e, result) => {
       if(e) return cb(e);
-      cb && cb(e);
+      return cb(e, result);
     });
+};
+
+const isUserAllowedToModifyValue = (client, user, value_id, cb) => {
+  const q = `select v.id from value v, company c, localuser u
+    where v.company_id = c.id and u.id = c.creator_id and v.id = $1 and u.id = $2`;
+  client.query(q, [value_id, user.id], function(e, result) {
+    if(e) return cb(e);
+    return cb(e, result.rows.length != 0);
+  });
+};
+
+const updateValueSafe = (client, user, company, value, cb) => {
+  if(!value.id)
+    return insertValue(client, company.id, value, cb);
+
+  isUserAllowedToModifyValue(client, user, value.id, (e, permitted) => {
+    if(e) return cb(e);
+    if(!permitted) return cb({
+      type: 'error',
+      message: 'user not allowed to update value',
+      user: user,
+      value: value
+    });
+    return updateValue(client, value, cb);
+  });
+};
+
+const updateValuesSafe = (client, user, company, valueList, cb) => {
+  doAsync.map(valueList, _.curry(updateValueSafe)(client, user, company), cb);
 };
 
 const updateLocation = (client, location, cb) => {
     client.query('update location set latitude = $1, longitude = $2 where id = $3', [location.coords.latitude, location.coords.longitude, location.id], (e, result) => {
       if(e) return cb(e);
-      cb && cb();
+      return cb(e, result);
     });
 };
 
-const updateCompany = (company, cb) => {
-  db.connect((e, client, done) => {
+const isUserAllowedToModifyLocation = (client, user, location_id, cb) => {
+  const q = `select l.id from location l, company c, localuser u
+    where l.company_id = c.id and u.id = c.creator_id and l.id = $1 and u.id = $2`;
+  client.query(q, [location_id, user.id], function(e, result) {
     if(e) return cb(e);
-    client.query('update company set name = $1 where id = $2', [company.name, company.id], (e, result) => {
-      const afterUpdate = collectErrorsAndResults(
-        _.after(company.values.length + company.locations.length, (err, results) => {
+    return cb(e, result.rows.length != 0);
+  });
+};
+
+const updateLocationSafe = (client, user, company, location, cb) => {
+  if(!location.id)
+    return insertLocation(client, company.id, location, cb);
+
+  isUserAllowedToModifyLocation(client, user, location.id, (e, permitted) => {
+    if(e) return cb(e);
+    if(!permitted) return cb({
+      type: 'error',
+      message: 'user not allowed to update location',
+      user: user,
+      location: location
+    });
+    return updateLocation(client, location, cb);
+  });
+};
+
+const updateLocationsSafe = (client, user, company, locationList, cb) => {
+  doAsync.map(locationList, _.curry(updateLocationSafe)(client, user, company), cb);
+};
+
+const updateLocationsAndValuesSafe = (client, user, company, locationList, valueList, cb) => {
+  doAsync.parallel([
+    _.curry(updateLocationsSafe)(client, user, company, locationList),
+    _.curry(updateValuesSafe)(client, user, company, valueList)
+  ], cb);
+};
+
+const updateCompany = (company, user, cb) => {
+  db.connect((e, client, done) => {
+    if(e) { done(); return cb(e); }
+    isUserAllowedToModifyCompany(client, user, company.id, (e, permitted) => {
+      client.query('update company set name = $1 where id = $2', [company.name, company.id], (e, result) => {
+        if(e) { done(); return cb(e); }
+        updateLocationsAndValuesSafe(client, user, company, company.locations, company.values, (e, results) => {
           done();
-          if(err) return cb(err);
-          cb && cb(err, results);
-      }));
-
-      _.each(company.values, (value) => {
-        if(value.id)
-          updateValue(client, value, afterUpdate);
-        else
-          insertValue(client, company.id, value, afterUpdate);
-      });
-
-      _.each(company.locations, (location) => {
-        if(location.id)
-          updateLocation(client, location, afterUpdate);
-        else
-          insertLocation(client, company.id, location, afterUpdate);
+          if(e) return cb(e);
+          return cb && cb(e, results);
+        });
       });
     });
   });
