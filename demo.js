@@ -11,8 +11,8 @@ const Company = require('./Company');
 
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 
-const wipe = function(){
-  db.executeQuery(schema, function(){
+const wipe = () => {
+  db.executeQuery(schema, () => {
     const Pausenverkauf = {
       name: 'Pausenverkauf',
       values: [{
@@ -45,14 +45,14 @@ const wipe = function(){
 
     User.create('TanteEmma', 'te123', (e, user) => {
       if(e) throw e;
-      Company.create(TanteEmmaLaden, (e) => {
+      Company.create(TanteEmmaLaden, user, (e) => {
         if(e) throw e;
       });
     });
 
     User.create('GudrunP', 'gp123', (e, user) => {
       if(e) throw e;
-      Company.create(Pausenverkauf, (e) => {
+      Company.create(Pausenverkauf, user, (e) => {
         if(e) throw e;
       });
     });

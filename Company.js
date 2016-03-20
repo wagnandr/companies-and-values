@@ -105,11 +105,10 @@ const insertLocation = (client, company_id, location, cb) => {
   });
 };
 
-const createCompany = (company, cb) => {
+const createCompany = (company, user, cb) => {
   db.connect((e, client, done) => {
     if(e) return cb(e);
-    const insertCompanyString = 'insert into company (name) values ($1) returning id';
-    client.query(insertCompanyString, [company.name], function(e, result){
+    client.query('insert into company (name, creator_id) values ($1, $2) returning id', [company.name, user.id], function(e, result){
       if(e) return cb(e);
       const id = company.id = result.rows[0].id;
 

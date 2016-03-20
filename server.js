@@ -42,6 +42,17 @@ passport.deserializeUser((id, done) => {
   });
 });
 
+// Only lets the user pass, if he is authenticated.
+function passIfAuthenticated(req, res, next){
+  if(req.isAuthenticated()){
+    return next();
+  } else {
+    return res.status(403).json({
+      message: 'not authenticated'
+    });
+  }
+}
+
 // configure body parser
 // parses the data from post request
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -93,17 +104,16 @@ app.get('/api/company/listall', (req, res) => {
   })
 });
 
-app.post('/api/company/create', (req, res) => {
-  Company.create(req.body, (err) => {
+app.post('/api/company/create', passIfAuthenticated, (req, res) => {
+  Company.create(req.body, req.user, (err) => {
     if(err){
-      console.log(err)
       return res.status(500).json({status: 'error', error: err})
     }
     res.json({status: 'success'});
   });
 });
 
-app.post('/api/company/update', (req, res) => {
+app.post('/api/company/update', passIfAuthenticated, (req, res) => {
   Company.update(req.body, (err) => {
     if(err){
       console.log(err)
