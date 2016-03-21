@@ -153,13 +153,57 @@ describe('Company', function (){
           Company.findById(modification.id, (e, foundCompany) => {
             assert(!e, 'no finding')
             assert(_.some(foundCompany.values, (value) => {
-              console.log(value)
               return (value.id == modifiedValue.id) && (value.name == 'modified value');
-            }), 'location was modified');
+            }), 'value was modified');
             done();
           });
         });
     });
+
+    it('should insert new values', (done) => {
+        const modification = _.clone(companyToModify);
+        modification.values.push({ name: 'new value' });
+        Company.update(modification, testUser1, (e, company) => {
+          assert(!e, 'no error updating')
+          Company.findById(modification.id, (e, foundCompany) => {
+            assert(!e, 'no finding')
+            assert(_.some(foundCompany.values, (value) => {
+              return (value.name == 'new value') && _.isNumber(value.id);
+            }), 'value was inserted');
+            done();
+          });
+        });
+    });
+
+    it('should insert new locations', (done) => {
+        const modification = _.clone(companyToModify);
+        modification.locations.push({ coords: {latitude: 33, longitude: 44}});
+        Company.update(modification, testUser1, (e, company) => {
+          assert(!e, 'no error updating')
+          Company.findById(modification.id, (e, foundCompany) => {
+            assert(!e, 'no finding')
+            assert(_.some(foundCompany.locations, (location) => {
+              return (location.coords.latitude == 33) &&
+                     (location.coords.longitude == 44) &&
+                     _.isNumber(location.id);
+            }), 'location was inserted');
+            done();
+          });
+        });
+    });
+
+    it('should return an error if another user changes the company', (done) => {
+        const CompanyAModified = _.clone(companyToModifyBlueprint);
+        const modifiedName = CompanyAModified.name = 'modifiedA'
+        Company.update(CompanyAModified, testUser2, (e, company) => {
+          assert(e, 'returns error');
+          done();
+        });
+    });
+
+    it('should return an error if another user steals locations');
+
+    it('should return an error if another user steals values');
 
   });
 });
